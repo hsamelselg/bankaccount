@@ -3,9 +3,11 @@ package com.bank.bankapplication.service;
 import com.bank.bankapplication.config.RabbitMQConfig;
 import com.bank.bankapplication.dto.AccountEvent;
 import com.bank.bankapplication.dto.CreateAccountRequest;
+import com.bank.bankapplication.dto.TransactionRequest;
 import com.bank.bankapplication.mapper.AccountMapper;
 import com.bank.bankapplication.model.Account;
 import com.bank.bankapplication.model.Balance;
+import com.bank.bankapplication.model.Transaction;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.support.converter.JacksonJsonMessageConverter;
 import org.springframework.stereotype.Service;
@@ -64,5 +66,48 @@ public class AccountService {
             throw new RuntimeException("Account not found with ID: " +  accountId);
         }
         return account;
+    }
+
+    public Transaction createTransaction(TransactionRequest request) {
+        if (request.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Invalid amount: " + request.getAmount());
+        }
+        if (request.getDescription() == null || request.getDescription().isBlank()) {
+            throw new IllegalArgumentException("Missing description: " + request.getDescription());
+        }
+        if (!"IN".equals(request.getDirection()) && !"OUT".equals(request.getDirection())) {
+            throw new IllegalArgumentException("Invalid direction: " + request.getDirection());
+        }
+
+        Account account = accountMapper.findAccountById(request.getAccountId());
+        if (account == null) {
+            throw new RuntimeException("Account not found with ID: " +  request.getAccountId());
+        }
+
+        Balance targetBalance = account.getBalances().stream()
+                .filter(b -> b.getCurrency().equals(request.getCurrency()))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Account does not have currency: " + request.getCurrency()));
+
+        if ("OUT".equals(request.getDirection()) &&  targetBalance.getAvailableAmount().compareTo(request.getAmount()) < 0) {
+            throw new IllegalArgumentException("Insufficient funds");
+        }
+
+        BigDecimal multiplier = "IN".equals(request.getDirection()) ? BigDecimal.ONE : new BigDecimal("-1");
+        BigDecimal amountChange = request.getAmount().multiply(multiplier);
+
+        Transaction transaction = new Transaction();
+        transaction.setAccountId(account.getAccountId());
+        transaction.setAmount(request.getAmount());
+        transaction.setCurrency(request.getCurrency());
+        transaction.setDirection(request.getDirection());
+        transaction.setDescription(request.getDescription());
+
+        accountMapper.insertTransaction(transaction);
+        accountMapper.updateBalance(request.getAccountId(), request.getCurrency(), amountChange);
+
+        rabbitTemplate.convertAndSend(RabbitMQConfig.EXCHANGE, "account.transaction", transaction);
+
+        return transaction;
     }
 }

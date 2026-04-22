@@ -1,7 +1,9 @@
 package com.bank.bankapplication.controller;
 
 import com.bank.bankapplication.dto.CreateAccountRequest;
+import com.bank.bankapplication.dto.TransactionRequest;
 import com.bank.bankapplication.model.Account;
+import com.bank.bankapplication.model.Transaction;
 import com.bank.bankapplication.service.AccountService;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,5 +25,10 @@ public class AccountController {
     @GetMapping("/{id}")
     public Account getAccount(@PathVariable Long id) {
         return accountService.getAccount(id);
+    }
+
+    @PostMapping("/transactions")
+    public Transaction createTransaction(@RequestBody TransactionRequest request) {
+        return accountService.createTransaction(request);
     }
 }
