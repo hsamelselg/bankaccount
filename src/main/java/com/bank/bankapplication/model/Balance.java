@@ -6,6 +6,8 @@ import java.math.BigDecimal;
 
 @Data
 public class Balance {
-    private BigDecimal availabeAmount;
+    private BigDecimal availableAmount;
     private String currency;
 }
+
+

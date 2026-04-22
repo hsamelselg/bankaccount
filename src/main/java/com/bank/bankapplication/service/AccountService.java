@@ -48,13 +48,21 @@ public class AccountService {
         for (String currency : request.getCurrencies()) {
             Balance balance = new Balance();
             balance.setCurrency(currency);
-            balance.setAvailabeAmount(BigDecimal.ZERO);
+            balance.setAvailableAmount(BigDecimal.ZERO);
 
-            accountMapper.insertBalance(account.getAccountId(), balance.getAvailabeAmount(), currency);
+            accountMapper.insertBalance(account.getAccountId(), balance.getAvailableAmount(), currency);
             balances.add(balance);
         }
 
         account.setBalances(balances);
+        return account;
+    }
+
+    public Account getAccount(Long accountId) {
+        Account account = accountMapper.findAccountById(accountId);
+        if (account == null) {
+            throw new RuntimeException("Account not found with ID: " +  accountId);
+        }
         return account;
     }
 }
