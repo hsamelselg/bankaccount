@@ -25,14 +25,6 @@ public class BankaccountApplication {
 	CommandLineRunner testDatabase(AccountService accountService) {
 		return args -> {
 			System.out.println("--- TESTING SERVICE LOGIC ---");
-			CreateAccountRequest req = new CreateAccountRequest();
-			req.setCustomerId("user_99");
-			req.setCountry("Estonia");
-			req.setCurrencies(List.of("EUR", "GBP"));
-
-			Account result = accountService.createAccount(req);
-			System.out.println("Created Account ID: " + result.getAccountId());
-			System.out.println("Balances Created: " + result.getBalances().size());
 		};
 	}
 }

@@ -38,13 +38,10 @@ public class AccountService {
             }
         }
         Account account = new Account();
-        account.setCustomerId(request.getCostumerId());
+        account.setCustomerId(request.getCustomerId());
         account.setCountry(request.getCountry());
 
         accountMapper.insertAccount(account);
-
-        AccountEvent event = new AccountEvent("ACCOUNT_CREATED", account.getAccountId(), account.getCostumerId());
-        rabbitTemplate.convertAndSend(RabbitMQConfig.EXCHANGE, "account.event.created", event);
 
         List<Balance> balances = new ArrayList<>();
         for (String currency : request.getCurrencies()) {
@@ -55,6 +52,10 @@ public class AccountService {
             accountMapper.insertBalance(account.getAccountId(), balance.getAvailableAmount(), currency);
             balances.add(balance);
         }
+        account.setBalances(balances);
+        AccountEvent event = new AccountEvent("ACCOUNT_CREATED", account.getAccountId(), account.getCustomerId(), account.getBalances());
+        rabbitTemplate.convertAndSend(RabbitMQConfig.EXCHANGE, "account.event.created", event);
+
 
         account.setBalances(balances);
         return account;
@@ -93,21 +94,32 @@ public class AccountService {
             throw new IllegalArgumentException("Insufficient funds");
         }
 
+        BigDecimal currentBalance = accountMapper.getBalanceAmount(request.getAccountId(), request.getCurrency());
+
         BigDecimal multiplier = "IN".equals(request.getDirection()) ? BigDecimal.ONE : new BigDecimal("-1");
-        BigDecimal amountChange = request.getAmount().multiply(multiplier);
+        BigDecimal newBalance = currentBalance.add(request.getAmount().multiply(multiplier));
 
         Transaction transaction = new Transaction();
-        transaction.setAccountId(account.getAccountId());
+        transaction.setAccountId(request.getAccountId());
         transaction.setAmount(request.getAmount());
         transaction.setCurrency(request.getCurrency());
         transaction.setDirection(request.getDirection());
         transaction.setDescription(request.getDescription());
+        transaction.setBalanceAfterTransaction(newBalance);
 
         accountMapper.insertTransaction(transaction);
-        accountMapper.updateBalance(request.getAccountId(), request.getCurrency(), amountChange);
-
-        rabbitTemplate.convertAndSend(RabbitMQConfig.EXCHANGE, "account.transaction", transaction);
+        accountMapper.updateBalance(request.getAccountId(), request.getCurrency(), request.getAmount().multiply(multiplier));
+        rabbitTemplate.convertAndSend(RabbitMQConfig.EXCHANGE, "account.event.transaction", transaction);
 
         return transaction;
+    }
+
+    public List<Transaction> getTransaction(Long accountId) {
+        Account account = accountMapper.findAccountById(accountId);
+        if (account == null) {
+            throw new RuntimeException("Account not found with ID: " +  accountId);
+        }
+        List<Transaction> transactions = accountMapper.findTransactionByAccountId(accountId);
+        return transactions;
     }
 }

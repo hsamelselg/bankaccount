@@ -10,5 +10,6 @@ public class Transaction {
     private BigDecimal amount;
     private String currency;
     private String direction;
-    private String Description;
+    private String description;
+    private BigDecimal balanceAfterTransaction;
 }

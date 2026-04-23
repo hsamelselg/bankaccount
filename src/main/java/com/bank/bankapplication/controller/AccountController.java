@@ -7,6 +7,8 @@ import com.bank.bankapplication.model.Transaction;
 import com.bank.bankapplication.service.AccountService;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/accounts")
 public class AccountController {
@@ -30,5 +32,10 @@ public class AccountController {
     @PostMapping("/transactions")
     public Transaction createTransaction(@RequestBody TransactionRequest request) {
         return accountService.createTransaction(request);
+    }
+
+    @GetMapping("/{accountId}/transactions")
+    public List<Transaction> getTransaction(@PathVariable Long accountId) {
+        return accountService.getTransaction(accountId);
     }
 }
