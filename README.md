@@ -1,6 +1,6 @@
 # Bank Account Application
 
-A small core banking solution built with Java 17, Spring Boot, MyBatis, PostgreSQL, and RabbitMQ. It supports account management, multi-currency balances, and transaction processing, with all state changes published to RabbitMQ.
+A small core banking solution built with Java 21, Spring Boot, MyBatis, PostgreSQL, and RabbitMQ. It supports account management, multi-currency balances, and transaction processing, with all state changes published to RabbitMQ.
 
 ---
 
