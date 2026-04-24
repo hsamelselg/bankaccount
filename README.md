@@ -79,7 +79,7 @@ docker-compose down -v
 ./gradlew test
 ```
 
-Test coverage is at least 80%, verified with integration tests against a real PostgreSQL instance.
+Test coverage is at 80%, verified with integration tests against a real PostgreSQL instance.
 
 ---
 
