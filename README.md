@@ -55,7 +55,11 @@ This will start:
 - PostgreSQL (with the database schema initialised automatically via SQL scripts)
 - RabbitMQ
 
-The application will be available at `http://localhost:8080`.
+- **Backend API:** The application runs on `http://localhost:8080`. Note that there is no graphical user interface (GUI) on the root page. To interact with the API, please use a tool like Postman or `curl`.
+
+- **RabbitMQ Management UI:** Available at `http://localhost:15672` (Login: `guest` / `guest`). You can monitor message exchanges and queues here.
+
+- **Database:** PostgreSQL is running on port `5432`.
 
 ### 3. Stop all services
 
